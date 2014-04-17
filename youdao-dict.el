@@ -33,7 +33,7 @@
 	(error "Wrong word!"))
     (setq word word)))
 
-(defun youdao-dict-parse-xml (xml-result)
+(defun youdao-dict-parse-xml (xml-result &optional fromp senp)
   "Parse the xml crawled and return the useful content"
   (let (buffer youdao-dict original-query return-phrase phonetic-symbol
 	       translations trans-content word-forms form-content
@@ -49,7 +49,7 @@
 					 youdao-dict 'return-phrase)))))
     (when (equal return-phrase nil)
       (error "Opps!Word not found!"))
-    
+
     (setq phonetic-symbol (car (last (car (xml-get-children
 					   youdao-dict 'phonetic-symbol)))))
     ;; get translations
@@ -87,7 +87,7 @@
 	       (push
 		(car (last (car (xml-get-children sen 'sentence-translation))))
 		sen-content)))
-    
+
     (setq result
 	  (append
 	   (list
@@ -96,8 +96,8 @@
 	    (if phonetic-symbol
 		(concat "Phonetic: /" phonetic-symbol "/")))
 	   (if trans-content (reverse trans-content))
-	   (if form-content (reverse form-content))
-	   (if sen-content (reverse sen-content))))))
+	   (if (and fromp form-content) (reverse form-content))
+	   (if (and senp sen-content) (reverse sen-content))))))
 
 (defun youdao-dict ()
   "Query a word from youdao online dictionaries and show it."
@@ -109,8 +109,33 @@
 			      (format SEARCH-URL
 				      (url-hexify-string word-to-query))
 			      " 2> /dev/null")))
-    (popup-menu* (youdao-dict-parse-xml xml-result)
-		 :margin t)))
+    (clippy-say (mapconcat 'identity
+                           (mapcar '(lambda (string)
+                                      (if (stringp string)
+                                          (string-auto-break string 20)))
+                                   (youdao-dict-parse-xml xml-result))
+                           "\n"))))
+(defun youdao-dict-detail ()
+  "Query a word from youdao online dictionaries and show it."
+  (interactive)
+  (let (word-to-query xml-result)
+    (setq word-to-query (read-word))
+    (setq xml-result (shell-command-to-string
+		      (concat "curl "
+			      (format SEARCH-URL
+				      (url-hexify-string word-to-query))
+			      " 2> /dev/null")))
+    (with-output-to-temp-buffer "*Youdao*"
+      (print (mapconcat 'identity
+                        (youdao-dict-parse-xml xml-result t t)
+                        "\n")))))
+
+(defun string-auto-break (string maxlen)
+  (if (< (length string) maxlen)
+      string
+      (concat (substring string 0 maxlen)
+              "\n"
+              (string-auto-break (substring string maxlen) maxlen))))
 
 (provide 'youdao-dict)
 

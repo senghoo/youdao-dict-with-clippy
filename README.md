@@ -9,6 +9,7 @@ Youdao online dictionary query for Emacs in Linux
 * Linux/OS X
 * Curl
 * Online
+* [clippy.el](https://github.com/Fuco1/clippy.el)
 
 ## Installation
 
@@ -25,12 +26,15 @@ Load the files and requre the function like:
 
 ## Usage
 
-You can query a word by `M-x youdao-dict`. And you should add a
-keybinding:
+You can query a word by `M-x youdao-dict` or view detail by`M-x youdao-dict-detail. And you should add a keybinding:
 
 ```lisp
 (global-set-key (kbd "key-you-like") 'youdao-dict)
+(global-set-key (kbd "key-you-like") 'youdao-dict-detail)
 ```
+
+`youdao-dict` show result using clippy
+`youdao-dict-detail` show result using temp-buffer
 
 ## TODO
 
